@@ -1,7 +1,65 @@
 import React, { useState, useEffect } from "react";
-import apiClient from "../api/client";
-import UserHeader from "../components/UserHeader";
 import { useNavigate } from "react-router-dom";
+import UserHeader from "../components/UserHeader";
+import apiClient from "../api/client";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#ff8c00",
+      light: "#ffa500",
+      dark: "#e67e00",
+      contrastText: "#fff",
+    },
+    secondary: {
+      main: "#ffa500",
+    },
+    background: {
+      default: "#fff8f0",
+      paper: "#ffffff",
+    },
+    success: {
+      main: "#4caf50",
+    },
+    error: {
+      main: "#f44336",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            transform: "translateY(-8px)",
+            boxShadow: "0 20px 40px rgba(255, 140, 0, 0.25)",
+          },
+        },
+      },
+    },
+  },
+});
 
 function Checkout() {
   const [address, setAddress] = useState("");
@@ -89,96 +147,160 @@ function Checkout() {
   };
 
   return (
-    <>
-      <UserHeader
-        onLogout={() => {
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-          navigate('/login');
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #fff8f0 0%, #ffe4cc 50%, #ffd6b3 100%)",
+          minHeight: "100vh",
+          width: "100%",
         }}
-        onProfile={() => {
-          navigate('/user/profile');
-        }}
-        onCart={() => {
-          navigate('/user/cart');
-        }}
-        onHome={() => {
-          navigate('/user/orders');
-        }}
-      />
+      >
+        <UserHeader
+          onLogout={() => {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            navigate('/login');
+          }}
+          onProfile={() => {
+            navigate('/user/profile');
+          }}
+          onCart={() => {
+            navigate('/user/cart');
+          }}
+          onHome={() => {
+            navigate('/user/orders');
+          }}
+        />
 
-      <div className="container" style={{ maxWidth: 600, margin: "32px auto" }}>
-        <div className="card col" style={{ padding: 24 }}>
-          <h2>Checkout</h2>
+        <Box sx={{ py: 6, maxWidth: "600px", mx: "auto", px: 2 }}>
+          <Card elevation={3} sx={{ p: 4, backgroundColor: "#ffffff" }}>
+            <CardContent>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: "#ff8c00", mb: 3, textAlign: "center" }}>
+                Checkout
+              </Typography>
 
-          <p>
-            Subtotal: <strong>₱{subtotal.toFixed(2)}</strong>
-          </p>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Subtotal: <strong>₱{subtotal.toFixed(2)}</strong>
+                </Typography>
+              </Box>
 
-          <label>
-            Shipping Location
-            <select
-              name="shipping"
-              className="input"
-              value={shipping}
-              onChange={(e) => setShipping(e.target.value)}
-            >
-              <option value="">Select Location</option>
-              <option value="Luzon">Luzon - ₱50</option>
-              <option value="Visayas">Visayas - ₱90</option>
-              <option value="Mindanao">Mindanao - ₱110</option>
-              <option value="International">International - ₱200</option>
-            </select>
-          </label>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel>Shipping Location</InputLabel>
+                <Select
+                  value={shipping}
+                  label="Shipping Location"
+                  onChange={(e) => setShipping(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#ff8c00",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#e67e00",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#ff8c00",
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Select Location</em>
+                  </MenuItem>
+                  <MenuItem value="Luzon">Luzon - ₱50</MenuItem>
+                  <MenuItem value="Visayas">Visayas - ₱90</MenuItem>
+                  <MenuItem value="Mindanao">Mindanao - ₱110</MenuItem>
+                  <MenuItem value="International">International - ₱200</MenuItem>
+                </Select>
+              </FormControl>
 
-          <p>
-            Shipping Fee: <strong>₱{shippingFee.toFixed(2)}</strong>
-          </p>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Shipping Fee: <strong>₱{shippingFee.toFixed(2)}</strong>
+                </Typography>
+              </Box>
 
-          <p style={{ marginBottom: 16 }}>
-            <strong>Total: ₱{totalAmount.toFixed(2)}</strong>
-          </p>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: "#ff8c00" }}>
+                  Total: ₱{totalAmount.toFixed(2)}
+                </Typography>
+              </Box>
 
-          <label>
-            Address
-            <input
-              name="address"
-              type="text"
-              className="input"
-              placeholder="Enter delivery address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </label>
+              <TextField
+                fullWidth
+                label="Address"
+                placeholder="Enter delivery address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                sx={{
+                  mb: 3,
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#ff8c00",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#e67e00",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#ff8c00",
+                    },
+                  },
+                }}
+              />
 
-          <label>
-            Phone Number
-            <input
-              name="phone"
-              type="text"
-              className="input"
-              placeholder="Enter contact number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </label>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                placeholder="Enter contact number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                sx={{
+                  mb: 3,
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#ff8c00",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#e67e00",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#ff8c00",
+                    },
+                  },
+                }}
+              />
 
-          <button
-            className="btn mt-16"
-            onClick={handleCheckout}
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Place Order"}
-          </button>
+              <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                onClick={handleCheckout}
+                disabled={loading}
+                sx={{
+                  backgroundColor: "#ff8c00",
+                  py: 1.5,
+                  fontSize: "1rem",
+                  "&:hover": { backgroundColor: "#e67e00" },
+                  "&:disabled": { backgroundColor: "#ccc" },
+                }}
+              >
+                {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Place Order"}
+              </Button>
 
-          {status && (
-            <p className="text-center mt-16" style={{ color: "#f99" }}>
-              {status}
-            </p>
-          )}
-        </div>
-      </div>
-    </>
+              {status && (
+                <Alert
+                  severity={status.includes("✅") ? "success" : status.includes("⚠️") ? "warning" : "error"}
+                  sx={{ mt: 3 }}
+                >
+                  {status}
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
 

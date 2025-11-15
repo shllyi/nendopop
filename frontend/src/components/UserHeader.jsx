@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 
 function UserHeader({ onLogout, onProfile, onSearch, onCart, onHome }) {
   const navigate = useNavigate();
-  const [showMenu, setShowMenu] = useState(false);
 
   const goTo = (path, fallback) => {
     if (typeof fallback === "function") return fallback();
@@ -192,169 +191,101 @@ function UserHeader({ onLogout, onProfile, onSearch, onCart, onHome }) {
           </svg>
         </button>
 
-        {/* Profile Dropdown */}
-        <div
-          style={{ position: "relative", display: "flex", alignItems: "center" }}
-          onMouseEnter={() => setShowMenu(true)}
-          onMouseLeave={() => setShowMenu(false)}
+        {/* Profile Button */}
+        <button
+          title="Profile"
+          onClick={() => (onProfile ? onProfile() : navigate("/user/profile"))}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 10,
+            padding: 10,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 140, 0, 0.15)';
+            e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.4)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
         >
-          <button
-            title="Profile"
-            onClick={() => (onProfile ? onProfile() : navigate("/user/profile"))}
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: 10,
-              padding: 10,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 140, 0, 0.15)';
-              e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-            }}
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
-              <circle cx="12" cy="8" r="4" stroke="#000" strokeWidth="2" />
-              <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="#000" strokeWidth="2" />
-            </svg>
-          </button>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <circle cx="12" cy="8" r="4" stroke="#000" strokeWidth="2" />
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="#000" strokeWidth="2" />
+          </svg>
+        </button>
 
-          {showMenu && (
-            <div
-              style={{
-                position: "absolute",
-                top: 'calc(100% + 4px)',
-                right: 0,
-                background: "#fff",
-                border: "1px solid rgba(255, 140, 0, 0.25)",
-                borderRadius: 12,
-                minWidth: 200,
-                boxShadow: "0 12px 32px rgba(255, 140, 0, 0.18)",
-                padding: 8,
-                zIndex: 20,
-                animation: 'slideDown 0.2s ease',
-              }}
-            >
-              <style>{`
-                @keyframes slideDown {
-                  from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                  }
-                  to {
-                    opacity: 1;
-                    transform: translateY(0);
-                  }
-                }
-              `}</style>
-              
-              <button
-                onClick={() => (onProfile ? onProfile() : navigate("/user/profile"))}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#ff8c00',
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  borderRadius: 8,
-                  transition: 'all 0.2s ease',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 140, 0, 0.12)';
-                  e.currentTarget.style.color = '#d46f00';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#ff8c00';
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M4 21v-2a4 4 0 0 1 3-3.87" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span style={{ marginLeft: 12, fontWeight: 500 }}>My Profile</span>
-              </button>
+        {/* My Orders Button */}
+        <button
+          title="My Orders"
+          onClick={() => navigate("/user/orders")}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 10,
+            padding: 10,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 140, 0, 0.15)';
+            e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.4)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <path d="M3 3h18v4H3z" stroke="#000" strokeWidth="2" />
+            <path d="M21 11v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6" stroke="#000" strokeWidth="2" />
+            <path d="M7 16v2" stroke="#000" strokeWidth="2" />
+          </svg>
+        </button>
 
-              <button
-                onClick={() => navigate("/user/orders")}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#ff8c00',
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  borderRadius: 8,
-                  transition: 'all 0.2s ease',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 140, 0, 0.12)';
-                  e.currentTarget.style.color = '#d46f00';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#ff8c00';
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M3 3h18v4H3z" />
-                  <path d="M21 11v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6" />
-                  <path d="M7 16v2" />
-                </svg>
-                <span style={{ marginLeft: 12, fontWeight: 500 }}>My Orders</span>
-              </button>
-
-              <button
-                onClick={() => navigate("/user/reviews")}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#ff8c00',
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  borderRadius: 8,
-                  transition: 'all 0.2s ease',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 140, 0, 0.12)';
-                  e.currentTarget.style.color = '#d46f00';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#ff8c00';
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M12 17l-5 3 1-5-4-3 5-1 2-5 2 5 5 1-4 3 1 5z" />
-                </svg>
-                <span style={{ marginLeft: 12, fontWeight: 500 }}>My Reviews</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {/* My Reviews Button */}
+        <button
+          title="My Reviews"
+          onClick={() => navigate("/user/reviews")}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 10,
+            padding: 10,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 140, 0, 0.15)';
+            e.currentTarget.style.borderColor = 'rgba(255, 140, 0, 0.4)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <path d="M12 17l-5 3 1-5-4-3 5-1 2-5 2 5 5 1-4 3 1 5z" stroke="#000" strokeWidth="2" />
+          </svg>
+        </button>
 
         {/* Divider */}
         <div style={{ 
