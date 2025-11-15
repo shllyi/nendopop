@@ -1,2 +1,4 @@
-- [x] Set fixed width: 330 and height: 550 on the Card sx in frontend/src/pages/home.jsx to ensure uniform size across all cards.
-- [x] Replace responsive Grid with fixed-width flexbox layout to ensure all cards are exactly 330x550.
+# TODO: Fix JSX Error in cart.jsx
+
+- [ ] Edit frontend/src/pages/cart.jsx to replace the incorrect `</div>` with `</Box>` on line 289 to match the opening `<Box>` tag.
+- [ ] Verify the fix by checking for any remaining JSX syntax errors (e.g., run linting or build process if available).
