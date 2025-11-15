@@ -4,6 +4,67 @@ import apiClient from "../api/client";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
 import ChangePasswordOtp from "../components/ChangePasswordOtp";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Avatar,
+  Tabs,
+  Tab,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#ff8c00",
+      light: "#ffa500",
+      dark: "#e67e00",
+      contrastText: "#fff",
+    },
+    secondary: {
+      main: "#ffa500",
+    },
+    background: {
+      default: "#fff8f0",
+      paper: "#ffffff",
+    },
+    success: {
+      main: "#4caf50",
+    },
+    error: {
+      main: "#f44336",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            transform: "translateY(-8px)",
+            boxShadow: "0 20px 40px rgba(255, 140, 0, 0.25)",
+          },
+        },
+      },
+    },
+  },
+});
 
 function AdminProfile({ user }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -100,96 +161,297 @@ function AdminProfile({ user }) {
     }
   };
   return (
-    <div>
-      <AdminHeader
-        onLogout={handleLogout}
-        onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
-      />
-      {isSidebarOpen && <div className="backdrop" onClick={() => setIsSidebarOpen(false)} />}
-      <div className="row" style={{ alignItems: "flex-start" }}>
-        <AdminSidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #fff8f0 0%, #ffe4cc 50%, #ffd6b3 100%)",
+          minHeight: "100vh",
+          width: "100%",
+        }}
+      >
+        <AdminHeader
           onLogout={handleLogout}
+          onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
         />
-        <main className="container" style={{ padding: 16 }}>
-          <div className="card col" style={{ maxWidth: 600, margin: "64px auto" }}>
-            <h1 className="text-center mb-16">Admin Profile</h1>
-            <div className="row" style={{ gap: 8, marginBottom: 16 }}>
-              <button className="btn" style={{ backgroundColor: activeTab === 'profile' ? '#333' : '#666' }} onClick={() => setActiveTab('profile')}>Profile</button>
-              <button className="btn" style={{ backgroundColor: activeTab === 'password' ? '#333' : '#666' }} onClick={() => setActiveTab('password')}>Change Password</button>
-            </div>
+        <Box sx={{ display: 'flex', flex: 1 }}>
+          <AdminSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            onLogout={handleLogout}
+          />
+          <Box sx={{ py: 6, maxWidth: "800px", mx: "auto", px: 2, flex: 1 }}>
+            <Card elevation={3} sx={{ p: 4, backgroundColor: "#ffffff" }}>
+              <CardContent>
+                <Tabs
+                  value={activeTab}
+                  onChange={(e, newValue) => setActiveTab(newValue)}
+                  sx={{
+                    mb: 4,
+                    "& .MuiTab-root": { fontWeight: 600, fontSize: "1rem", textTransform: "none" },
+                    "& .Mui-selected": { color: "#ff8c00 !important" },
+                    "& .MuiTabs-indicator": { bgcolor: "#ff8c00", height: 3 },
+                  }}
+                >
+                  <Tab label="Profile" value="profile" />
+                  <Tab label="Change Password" value="password" />
+                </Tabs>
 
-            {activeTab === 'profile' && (
-            <form className="col" onSubmit={handleSubmit}>
-              <div className="row" style={{ alignItems: "center" }}>
-                <div style={{ width: 96, height: 96, borderRadius: 8, border: "1px solid #333", overflow: "hidden", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="avatar preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <span style={{ fontSize: 12, color: "#bbb" }}>No avatar</span>
-                  )}
-                </div>
-                <div className="col" style={{ flex: 1 }}>
-                  <label>
-                    Avatar
-                    <input type="file" accept="image/*" onChange={handleAvatar} className="input" />
-                  </label>
-                </div>
-              </div>
-              <label>
-                Username
-                <input name="username" className="input" value={form.username} onChange={handleChange} placeholder="Username" required />
-              </label>
-              <label>
-                Email
-                <input type="email" name="email" className="input" value={form.email} onChange={handleChange} placeholder="Email" required />
-              </label>
-              <div className="row">
-                <label style={{ flex: 1 }}>
-                  First name
-                  <input name="firstName" className="input" value={form.firstName} onChange={handleChange} placeholder="First name" />
-                </label>
-                <label style={{ flex: 1 }}>
-                  Last name
-                  <input name="lastName" className="input" value={form.lastName} onChange={handleChange} placeholder="Last name" />
-                </label>
-              </div>
-              <label>
-                Address
-                <input name="address" className="input" value={form.address} onChange={handleChange} placeholder="Address" />
-              </label>
-              <div className="row">
-                <label style={{ flex: 1 }}>
-                  Phone number
-                  <input name="phone" className="input" value={form.phone} onChange={handleChange} placeholder="Phone number" />
-                </label>
-                <label style={{ flex: 1 }}>
-                  Gender
-                  <select name="gender" className="input" value={form.gender} onChange={handleChange}>
-                    <option value="">Select gender</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="nonbinary">Non-binary</option>
-                    <option value="other">Other</option>
-                    <option value="prefer_not_to_say">Prefer not to say</option>
-                  </select>
-                </label>
-              </div>
-              <button className="btn mt-16" type="submit">Save</button>
-              {status && <p className="text-center mt-16" style={{ fontSize: "0.875rem" }}>{status}</p>}
-            </form>
-            )}
+                {activeTab === 'profile' && (
+                  <>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: "#ff8c00", mb: 3, textAlign: "center" }}>
+                      Admin Profile
+                    </Typography>
 
-            {activeTab === 'password' && (
-              <div style={{ marginTop: 8 }}>
-                <ChangePasswordOtp user={user} />
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
+                    <form className="col" onSubmit={handleSubmit}>
+                      {/* Avatar */}
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                        <Avatar
+                          src={avatarPreview}
+                          sx={{ width: 96, height: 96, mr: 3 }}
+                        >
+                          {!avatarPreview && "No avatar"}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Button
+                            variant="outlined"
+                            component="label"
+                            sx={{
+                              borderColor: "#ff8c00",
+                              color: "#ff8c00",
+                              "&:hover": { borderColor: "#e67e00", bgcolor: "#fff3e0" },
+                            }}
+                          >
+                            Upload Avatar
+                            <input
+                              type="file"
+                              accept="image/*"
+                              hidden
+                              onChange={handleAvatar}
+                            />
+                          </Button>
+                        </Box>
+                      </Box>
+
+                      {/* User Info */}
+                      <TextField
+                        fullWidth
+                        label="Username"
+                        name="username"
+                        value={form.username}
+                        onChange={handleChange}
+                        sx={{
+                          mb: 3,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "#ff8c00",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#e67e00",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#ff8c00",
+                            },
+                          },
+                        }}
+                      />
+
+                      <TextField
+                        fullWidth
+                        label="Email"
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        sx={{
+                          mb: 3,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "#ff8c00",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#e67e00",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#ff8c00",
+                            },
+                          },
+                        }}
+                      />
+
+                      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                        <TextField
+                          fullWidth
+                          label="First Name"
+                          name="firstName"
+                          value={form.firstName}
+                          onChange={handleChange}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "#ff8c00",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "#e67e00",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#ff8c00",
+                              },
+                            },
+                          }}
+                        />
+                        <TextField
+                          fullWidth
+                          label="Last Name"
+                          name="lastName"
+                          value={form.lastName}
+                          onChange={handleChange}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "#ff8c00",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "#e67e00",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#ff8c00",
+                              },
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      <TextField
+                        fullWidth
+                        label="Address"
+                        name="address"
+                        value={form.address}
+                        onChange={handleChange}
+                        sx={{
+                          mb: 3,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "#ff8c00",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#e67e00",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#ff8c00",
+                            },
+                          },
+                        }}
+                      />
+
+                      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                        <TextField
+                          fullWidth
+                          label="Phone Number"
+                          name="phone"
+                          value={form.phone}
+                          onChange={handleChange}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "#ff8c00",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "#e67e00",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#ff8c00",
+                              },
+                            },
+                          }}
+                        />
+                        <FormControl fullWidth>
+                          <InputLabel>Gender</InputLabel>
+                          <Select
+                            name="gender"
+                            value={form.gender}
+                            onChange={handleChange}
+                            label="Gender"
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "#ff8c00",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "#e67e00",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#ff8c00",
+                                },
+                              },
+                            }}
+                          >
+                            <MenuItem value="">
+                              <em>Select gender</em>
+                            </MenuItem>
+                            <MenuItem value="female">Female</MenuItem>
+                            <MenuItem value="male">Male</MenuItem>
+                            <MenuItem value="nonbinary">Non-binary</MenuItem>
+                            <MenuItem value="other">Other</MenuItem>
+                            <MenuItem value="prefer_not_to_say">Prefer not to say</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+
+                      {/* Save button */}
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        type="submit"
+                        sx={{
+                          backgroundColor: "#ff8c00",
+                          py: 1.5,
+                          fontSize: "1rem",
+                          "&:hover": { backgroundColor: "#e67e00" },
+                          "&:disabled": { backgroundColor: "#ccc" },
+                        }}
+                      >
+                        {status === "Saving..." ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Save Profile"}
+                      </Button>
+
+                      {status && status !== "Saving..." && (
+                        <Alert
+                          severity={status.includes("✅") ? "success" : "error"}
+                          sx={{ mt: 3 }}
+                        >
+                          {status}
+                        </Alert>
+                      )}
+
+                      {/* Logout button */}
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={handleLogout}
+                        sx={{
+                          backgroundColor: "#f44336",
+                          py: 1.5,
+                          fontSize: "1rem",
+                          mt: 2,
+                          "&:hover": { backgroundColor: "#d32f2f" },
+                        }}
+                      >
+                        Logout
+                      </Button>
+                    </form>
+                  </>
+                )}
+
+                {activeTab === 'password' && (
+                  <Box sx={{ mt: 2 }}>
+                    <ChangePasswordOtp user={user} />
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
 export default AdminProfile;

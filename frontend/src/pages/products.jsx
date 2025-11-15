@@ -6,6 +6,87 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from "../api/client";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Avatar,
+  Chip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tabs,
+  Tab,
+  IconButton,
+  Grid,
+  Fade,
+} from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import RestoreIcon from '@mui/icons-material/Restore';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import CloseIcon from '@mui/icons-material/Close';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#ff8c00",
+      light: "#ffa500",
+      dark: "#e67e00",
+      contrastText: "#fff",
+    },
+    secondary: {
+      main: "#ffa500",
+    },
+    background: {
+      default: "#fff8f0",
+      paper: "#ffffff",
+    },
+    success: {
+      main: "#4caf50",
+    },
+    error: {
+      main: "#f44336",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            transform: "translateY(-8px)",
+            boxShadow: "0 20px 40px rgba(255, 140, 0, 0.25)",
+          },
+        },
+      },
+    },
+  },
+});
 
 const schema = yup.object({
   name: yup.string().required("Name is required"),

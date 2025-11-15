@@ -1,95 +1,146 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Box,
+  Button,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
+import {
+  Person as PersonIcon,
+  Logout as LogoutIcon,
+  Menu as MenuIcon,
+  ShoppingBag as ShoppingBagIcon,
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
+
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  background: "linear-gradient(135deg, #FCFCFC 0%, #D4C6A8 100%)",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+  position: "sticky",
+  top: 0,
+  zIndex: theme.zIndex.appBar,
+}));
+
+const BrandButton = styled(Button)(({ theme }) => ({
+  background: "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  backgroundClip: "text",
+  fontWeight: 800,
+  fontSize: "1.375rem",
+  letterSpacing: "0.5px",
+  fontFamily: "system-ui, -apple-system, sans-serif",
+  textTransform: "none",
+  padding: 0,
+  minWidth: "auto",
+  "&:hover": {
+    background: "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+    transform: "scale(1.05)",
+  },
+  transition: "all 0.3s ease",
+}));
+
+const StyledIconButton = styled(IconButton)(({ theme }) => ({
+  background: "rgba(255, 255, 255, 0.05)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
+  borderRadius: theme.spacing(1.25),
+  padding: theme.spacing(1.25),
+  color: theme.palette.common.black,
+  transition: "all 0.3s ease",
+  "&:hover": {
+    background: "rgba(255, 140, 0, 0.15)",
+    borderColor: "rgba(255, 140, 0, 0.4)",
+    transform: "translateY(-2px)",
+  },
+}));
+
+const LogoutButton = styled(IconButton)(({ theme }) => ({
+  background: "rgba(255, 59, 59, 0.1)",
+  border: "1px solid rgba(255, 59, 59, 0.2)",
+  borderRadius: theme.spacing(1.25),
+  padding: theme.spacing(1.25),
+  color: "#ff6b6b",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    background: "rgba(255, 59, 59, 0.2)",
+    borderColor: "rgba(255, 59, 59, 0.5)",
+    transform: "translateY(-2px)",
+  },
+}));
 
 function AdminHeader({ onLogout, onToggleSidebar }) {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleNavigate = (path) => {
     navigate(path);
   };
 
   return (
-    <header
-      className="row"
-      style={{
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "12px 16px",
-        borderBottom: "1px solid #333",
-        position: "sticky",
-        top: 0,
-        background: "#000",
-        zIndex: 10,
-      }}
-    >
-      <div className="row" style={{ alignItems: "center" }}>
-        <button
-          onClick={() => handleNavigate('/admin')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'inherit',
-            fontWeight: 700,
-            fontSize: 18,
-            cursor: 'pointer',
-            marginLeft: 8,
-            padding: 0,
-          }}
-          aria-label="NendoPop - admin home"
-        >
-          NendoPop
-        </button>
-      </div>
+    <StyledAppBar position="sticky" elevation={0}>
+      <Toolbar
+        sx={{
+          justifyContent: "space-between",
+          px: { xs: 2, sm: 3 },
+          minHeight: { xs: 64, sm: 72 },
+        }}
+      >
+        {/* Brand Section */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <BrandButton
+            onClick={() => handleNavigate("/admin")}
+            aria-label="NendoPop - admin home"
+            disableRipple
+          >
+            NendoPop
+          </BrandButton>
+        </Box>
 
-      <nav className="row" style={{ gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
-        {/* Profile icon button */}
-        <button
-          className="btn outline"
-          aria-label="Profile"
-          title="Profile"
-          onClick={() => handleNavigate('/admin/profile')}
-          style={{ padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M4 20c0-3.314 2.686-6 6-6h4c3.314 0 6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+        {/* Navigation Actions */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Profile Button */}
+          <StyledIconButton
+            title="Profile"
+            onClick={() => handleNavigate("/admin/profile")}
+            size="small"
+          >
+            <PersonIcon fontSize="small" />
+          </StyledIconButton>
 
-        {/* Logout icon button */}
-        <button
-          className="btn outline"
-          aria-label="Logout"
-          title="Logout"
-          onClick={() => {
-            if (onLogout) onLogout();
-            else navigate('/login');
-          }}
-          style={{ padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 17l5-5-5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 19H8a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+          {/* Logout Button */}
+          <LogoutButton
+            title="Logout"
+            onClick={() => {
+              if (onLogout) onLogout();
+              else navigate("/login");
+            }}
+            size="small"
+          >
+            <LogoutIcon fontSize="small" />
+          </LogoutButton>
 
-        {/* Hamburger on the right */}
-        <button
-          className="btn outline"
-          aria-label="Toggle sidebar"
-          onClick={onToggleSidebar}
-          title="Menu"
-          style={{ padding: 8, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M3 12h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M3 18h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
-      </nav>
-    </header>
+          {/* Menu Toggle Button */}
+          <StyledIconButton
+            title="Menu"
+            onClick={onToggleSidebar}
+            size="small"
+          >
+            <MenuIcon fontSize="small" />
+          </StyledIconButton>
+        </Box>
+      </Toolbar>
+    </StyledAppBar>
   );
 }
 

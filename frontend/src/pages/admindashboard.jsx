@@ -1,14 +1,101 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
+import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import {
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Alert,
+  Paper,
+  Button
+} from "@mui/material";
+import {
+  TrendingUp as TrendingUpIcon,
+  ShoppingCart as ShoppingCartIcon,
+  People as PeopleIcon,
+  Inventory as InventoryIcon,
+  Warning as WarningIcon,
+  Refresh as RefreshIcon
+} from "@mui/icons-material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
 import apiClient from "../api/client";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+// Custom theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#ff8c00",
+      light: "#ffa500",
+      dark: "#e67e00",
+      contrastText: "#fff",
+    },
+    secondary: {
+      main: "#ffa500",
+      light: "#ffb733",
+      dark: "#cc8400",
+    },
+    background: {
+      default: "#f8f9fa",
+      paper: "#ffffff",
+    },
+    success: {
+      main: "#4caf50",
+    },
+    error: {
+      main: "#f44336",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h4: {
+      fontWeight: 700,
+    },
+    h6: {
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          fontWeight: 600,
+          borderRadius: 10,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            transform: "translateY(-4px)",
+            boxShadow: "0 12px 24px rgba(0, 0, 0, 0.1)",
+          },
+        },
+      },
+    },
+  },
+});
+
+const COLORS = ['#ff8c00', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 function AdminDashboard({ user }) {
   const navigate = useNavigate();
@@ -30,15 +117,11 @@ function AdminDashboard({ user }) {
         setLoading(true);
         setError(null);
 
-        // Build query parameters for date filtering
         const params = new URLSearchParams();
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
 
-        // Fetch all dashboard data at once
         const response = await apiClient.get(`/api/v1/dashboard/all?${params.toString()}`);
-
-        console.log('Dashboard API Response:', response.data); // Debug log
 
         if (response.data.success) {
           setDashboardData(response.data.data);
@@ -56,7 +139,6 @@ function AdminDashboard({ user }) {
     fetchDashboardData();
   }, [startDate, endDate]);
 
-  // Separate effect for monthly sales year filtering
   useEffect(() => {
     const fetchMonthlySales = async () => {
       try {
@@ -81,7 +163,6 @@ function AdminDashboard({ user }) {
     fetchMonthlySales();
   }, [selectedYear]);
 
-  // Separate effect for daily sales filtering
   useEffect(() => {
     const fetchDailySales = async () => {
       try {
@@ -112,91 +193,56 @@ function AdminDashboard({ user }) {
     navigate("/login");
   };
 
-  // Loading state
   if (loading) {
     return (
-      <div>
-        <AdminHeader
-          onLogout={handleLogout}
-          onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
-        />
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '50px',
-          minHeight: '80vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div>
-            <div style={{ 
-              width: '50px', 
-              height: '50px', 
-              border: '4px solid #f3f3f3',
-              borderTop: '4px solid #0088FE',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px'
-            }} />
-            <p style={{ fontSize: '18px', color: '#666' }}>Loading dashboard data...</p>
-          </div>
-        </div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
+      <ThemeProvider theme={theme}>
+        <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
+          <AdminHeader
+            onLogout={handleLogout}
+            onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
+          />
+          <Container maxWidth={false} sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <CircularProgress size={60} sx={{ color: 'primary.main' }} />
+              <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
+                Loading dashboard data...
+              </Typography>
+            </Box>
+          </Container>
+        </Box>
+      </ThemeProvider>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div>
-        <AdminHeader
-          onLogout={handleLogout}
-          onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
-        />
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '50px',
-          minHeight: '80vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '40px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            maxWidth: '500px'
-          }}>
-            <p style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</p>
-            <p style={{ fontSize: '18px', color: '#d32f2f', marginBottom: '16px' }}>{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '10px 24px',
-                backgroundColor: '#0088FE',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
+      <ThemeProvider theme={theme}>
+        <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
+          <AdminHeader
+            onLogout={handleLogout}
+            onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
+          />
+          <Container maxWidth={false} sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Alert severity="error" sx={{ mb: 3 }}>
+                Unable to load dashboard
+                <Typography variant="body2">{error}</Typography>
+              </Alert>
+              <Button
+                variant="contained"
+                startIcon={<RefreshIcon />}
+                onClick={() => window.location.reload()}
+                size="large"
+              >
+                Retry
+              </Button>
+            </Box>
+          </Container>
+        </Box>
+      </ThemeProvider>
     );
   }
 
-  // Safe data access with defaults
   const stats = dashboardData?.stats || {};
   const monthlySales = dashboardData?.monthlySales || [];
   const dailySales = dashboardData?.dailySales || [];
@@ -207,311 +253,395 @@ function AdminDashboard({ user }) {
   const lowStockProducts = dashboardData?.lowStockProducts || [];
 
   return (
-    <div>
-      <style>{`
-        .card {
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          transition: all 0.3s ease;
-        }
-        .card:hover {
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          transform: translateY(-2px);
-        }
-      `}</style>
-
-      <AdminHeader
-        onLogout={handleLogout}
-        onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
-      />
-      {isSidebarOpen && (
-        <div className="backdrop" onClick={() => setIsSidebarOpen(false)} />
-      )}
-      <div className="row" style={{ alignItems: "flex-start" }}>
-        <AdminSidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
+    <ThemeProvider theme={theme}>
+      <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'background.default' }}>
+        <AdminHeader
           onLogout={handleLogout}
+          onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
         />
-        <main className="container" style={{ padding: 16 }}>
-          <div style={{ maxWidth: 1400, margin: "32px auto" }}>
-            <h1 className="text-center mb-16">Admin Dashboard ⚙️</h1>
-            <p className="text-center">Welcome back, <strong>{user?.username || 'Admin'}</strong> (Admin)</p>
-            <p className="text-center mb-32">Email: {user?.email || ''}</p>
+        <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          <AdminSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            onLogout={handleLogout}
+          />
+          <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+            <Container maxWidth="xl">
+              {/* Header Section */}
+              <Box sx={{ textAlign: 'center', mb: 4 }}>
+                <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 800, color: 'primary.main' }}>
+                  Admin Dashboard
+                </Typography>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  Welcome back, <strong>{user?.username || 'Admin'}</strong>
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {user?.email || ''}
+                </Typography>
+              </Box>
 
+              {/* Stats Cards */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <TrendingUpIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 0.5 }}>
+                        ₱{(stats.totalSales || 0).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        Total Sales
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <ShoppingCartIcon sx={{ fontSize: 48, color: 'success.main', mb: 1 }} />
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main', mb: 0.5 }}>
+                        {stats.totalOrders || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        Total Orders
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <PeopleIcon sx={{ fontSize: 48, color: 'warning.main', mb: 1 }} />
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main', mb: 0.5 }}>
+                        {stats.totalUsers || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        Total Users
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <InventoryIcon sx={{ fontSize: 48, color: 'error.main', mb: 1 }} />
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main', mb: 0.5 }}>
+                        {stats.totalProducts || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        Total Products
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
+              {/* Sales Analytics Section */}
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'primary.main', textAlign: 'center' }}>
+                Sales Analytics
+              </Typography>
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                {/* Monthly Sales Chart */}
+                <Grid item xs={12} lg={6}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          Monthly Sales Trend
+                        </Typography>
+                        <FormControl size="small" sx={{ minWidth: 120 }}>
+                          <InputLabel>Year</InputLabel>
+                          <Select
+                            value={selectedYear}
+                            label="Year"
+                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                          >
+                            {Array.from({ length: 5 }, (_, i) => {
+                              const year = new Date().getFullYear() - i;
+                              return <MenuItem key={year} value={year}>{year}</MenuItem>;
+                            })}
+                          </Select>
+                        </FormControl>
+                      </Box>
+                      {monthlySales.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                          <LineChart data={monthlySales}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}k`} />
+                            <Tooltip
+                              formatter={(value) => [`₱${value.toLocaleString()}`, 'Sales']}
+                              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px' }}
+                            />
+                            <Legend />
+                            <Line
+                              type="monotone"
+                              dataKey="sales"
+                              stroke="#ff8c00"
+                              strokeWidth={3}
+                              name="Monthly Sales"
+                              dot={{ fill: '#ff8c00', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">No sales data for this year</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-            {/* Stats Cards */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-              gap: '16px',
-              marginBottom: '32px' 
-            }}>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: '#666' }}>Total Sales</h3>
-                <p style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, color: '#0088FE' }}>
-                  ₱{(stats.totalSales || 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: '#666' }}>Total Orders</h3>
-                <p style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, color: '#00C49F' }}>
-                  {stats.totalOrders || 0}
-                </p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: '#666' }}>Total Users</h3>
-                <p style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, color: '#FFBB28' }}>
-                  {stats.totalUsers || 0}
-                </p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 8px 0', color: '#666' }}>Total Products</h3>
-                <p style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, color: '#FF8042' }}>
-                  {stats.totalProducts || 0}
-                </p>
-              </div>
-            </div>
+                {/* Daily Sales Chart */}
+                <Grid item xs={12} lg={6}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          Daily Sales Overview
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          <TextField
+                            type="date"
+                            label="Start"
+                            size="small"
+                            value={dailyStartDate}
+                            onChange={(e) => setDailyStartDate(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ width: 140 }}
+                          />
+                          <TextField
+                            type="date"
+                            label="End"
+                            size="small"
+                            value={dailyEndDate}
+                            onChange={(e) => setDailyEndDate(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ width: 140 }}
+                          />
+                        </Box>
+                      </Box>
+                      {dailySales.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                          <LineChart data={dailySales}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="_id" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={80} />
+                            <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}k`} />
+                            <Tooltip
+                              formatter={(value) => [`₱${value.toLocaleString()}`, 'Sales']}
+                              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px' }}
+                            />
+                            <Legend />
+                            <Line
+                              type="monotone"
+                              dataKey="sales"
+                              stroke="#00C49F"
+                              strokeWidth={3}
+                              name="Daily Sales"
+                              dot={{ fill: '#00C49F', r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">No daily sales data</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-            {/* Charts Row 1 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-              {/* Monthly Sales Chart */}
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: 0, color: 'black' }}>Monthly Sales</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 'bold' }}>Year:</label>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
-                    >
-                      {Array.from({ length: 5 }, (_, i) => {
-                        const year = new Date().getFullYear() - i;
-                        return <option key={year} value={year}>{year}</option>;
-                      })}
-                    </select>
-                  </div>
-                </div>
-                {monthlySales.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={monthlySales}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `₱${value.toLocaleString()}`} />
-                      <Legend />
-                      <Line type="monotone" dataKey="sales" stroke="#8884d8" strokeWidth={2} name="Sales" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                    No sales data available
-                  </div>
-                )}
-              </div>
+              {/* Business Insights Section */}
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'primary.main', textAlign: 'center' }}>
+                Business Insights
+              </Typography>
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                {/* Category Distribution */}
+                <Grid item xs={12} lg={6}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
+                        Product Categories
+                      </Typography>
+                      {categoryDistribution.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                          <PieChart>
+                            <Pie
+                              data={categoryDistribution}
+                              dataKey="count"
+                              nameKey="_id"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={110}
+                              label={({ _id, percent }) => `${_id} (${(percent * 100).toFixed(0)}%)`}
+                            >
+                              {categoryDistribution.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend verticalAlign="bottom" height={40} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">No category data</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-              {/* Daily Sales Chart */}
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: 0, color: 'black' }}>Sales Overview</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 'bold' }}>From:</label>
-                    <input
-                      type="date"
-                      value={dailyStartDate}
-                      onChange={(e) => setDailyStartDate(e.target.value)}
-                      style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
-                    />
-                    <label style={{ fontSize: '14px', fontWeight: 'bold' }}>To:</label>
-                    <input
-                      type="date"
-                      value={dailyEndDate}
-                      onChange={(e) => setDailyEndDate(e.target.value)}
-                      style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
-                    />
-                  </div>
-                </div>
-                {dailySales.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={dailySales}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="_id"
-                        tick={{ fontSize: 10 }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `₱${value.toLocaleString()}`} />
-                      <Legend />
-                      <Line type="monotone" dataKey="sales" stroke="#00C49F" strokeWidth={2} name="Sales" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                    No daily sales data available
-                  </div>
-                )}
-              </div>
-            </div>
+                {/* Order Status Distribution */}
+                <Grid item xs={12} lg={6}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
+                        Order Status Overview
+                      </Typography>
+                      {orderStatusDistribution.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                          <BarChart data={orderStatusDistribution}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="_id" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="count" fill="#8884d8" name="Orders" radius={[6, 6, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">No order status data</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-            {/* Charts Row 2 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-              {/* Category Distribution */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: 'black' }}>Products by Category</h3>
-                {categoryDistribution.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={categoryDistribution}
-                        dataKey="count"
-                        nameKey="_id"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label={(entry) => `${entry._id}: ${entry.count}`}
-                      >
-                        {categoryDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                    No category data available
-                  </div>
-                )}
-              </div>
+              {/* Revenue Analysis Section */}
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'primary.main', textAlign: 'center' }}>
+                Revenue Analysis
+              </Typography>
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
+                        Revenue by Category
+                      </Typography>
+                      {revenueByCategory.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={400}>
+                          <BarChart data={revenueByCategory}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="_id" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
+                            <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}k`} />
+                            <Tooltip formatter={(value) => [`₱${value.toLocaleString()}`, 'Revenue']} />
+                            <Legend />
+                            <Bar dataKey="revenue" fill="#00C49F" name="Revenue" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">No revenue data</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-              {/* Order Status Distribution */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: 'black' }}>Order Status Distribution</h3>
-                {orderStatusDistribution.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={orderStatusDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="count" fill="#8884d8" name="Orders" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                    No order status data available
-                  </div>
-                )}
-              </div>
-            </div>
+              {/* Tables Section */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                {/* Most Ordered Products */}
+                <Grid item xs={12} lg={6}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
+                        Top 10 Products
+                      </Typography>
+                      {mostOrderedProducts.length > 0 ? (
+                        <Box sx={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '2px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Product</th>
+                                <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Qty</th>
+                                <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Revenue</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {mostOrderedProducts.map((product, index) => (
+                                <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                  <td style={{ padding: '12px', fontSize: '13px' }}>{product.name}</td>
+                                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: 500 }}>{product.totalQuantity}</td>
+                                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: 500, color: '#00C49F' }}>₱{product.totalRevenue.toLocaleString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </Box>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">No product data</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-            {/* Charts Row 3 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
-              {/* Revenue by Category */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: 'black' }}>Revenue by Category</h3>
-                {revenueByCategory.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={revenueByCategory}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `₱${value.toLocaleString()}`} />
-                      <Legend />
-                      <Bar dataKey="revenue" fill="#00C49F" name="Revenue" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                    No revenue data available
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Tables Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '16px' }}>
-              {/* Most Ordered Products */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: 'black' }}>Top 10 Most Ordered Products</h3>
-                <div style={{ overflowX: 'auto' }}>
-                  {mostOrderedProducts.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #ddd' }}>
-                          <th style={{ padding: '8px', textAlign: 'left', color: 'black' }}>Product</th>
-                          <th style={{ padding: '8px', textAlign: 'right', color: 'black' }}>Quantity</th>
-                          <th style={{ padding: '8px', textAlign: 'right', color: 'black' }}>Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mostOrderedProducts.map((product, index) => (
-                          <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '8px', color: 'black' }}>{product.name}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', color: 'black' }}>{product.totalQuantity}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', color: 'black' }}>₱{product.totalRevenue.toLocaleString()}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
-                      No product data available
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Low Stock Products */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: '#FF8042' }}>⚠️ Low Stock Products</h3>
-                <div style={{ overflowX: 'auto' }}>
-                  {lowStockProducts.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #ddd' }}>
-                          <th style={{ padding: '8px', textAlign: 'left', color: 'black' }}>Product</th>
-                          <th style={{ padding: '8px', textAlign: 'left', color: 'black' }}>Category</th>
-                          <th style={{ padding: '8px', textAlign: 'right', color: 'black' }}>Stock</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {lowStockProducts.map((product, index) => (
-                          <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '8px', color: 'black' }}>{product.name}</td>
-                            <td style={{ padding: '8px', color: 'black' }}>{product.category}</td>
-                            <td style={{
-                              padding: '8px',
-                              textAlign: 'right',
-                              color: 'black',
-                              fontWeight: 'bold'
-                            }}>
-                              {product.stock}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
-                      No low stock products
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+                {/* Low Stock Products */}
+                <Grid item xs={12} lg={6}>
+                  <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <WarningIcon sx={{ color: 'error.main', mr: 1, fontSize: 24 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
+                          Low Stock Alert
+                        </Typography>
+                      </Box>
+                      {lowStockProducts.length > 0 ? (
+                        <Box sx={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '2px solid #e0e0e0', backgroundColor: '#fff5f5' }}>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Product</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Category</th>
+                                <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Stock</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {lowStockProducts.map((product, index) => (
+                                <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                  <td style={{ padding: '12px', fontSize: '13px' }}>{product.name}</td>
+                                  <td style={{ padding: '12px', fontSize: '13px' }}>{product.category}</td>
+                                  <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', color: '#d32f2f', fontSize: '13px' }}>
+                                    {product.stock}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </Box>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                          <Typography color="text.secondary">All products well stocked</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Container>
+          </Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
 
