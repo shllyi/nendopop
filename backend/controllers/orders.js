@@ -106,6 +106,7 @@ exports.updateOrderStatus = async (req, res) => {
 exports.cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { reason } = req.body;
     const userId = req.user?.id;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
@@ -115,9 +116,19 @@ exports.cancelOrder = async (req, res) => {
     if (order.status !== 'Pending') {
       return res.status(400).json({ success: false, message: 'Only pending orders can be cancelled' });
     }
+
+    // Store cancellation reason
     order.status = 'Cancelled';
+    order.cancellationReason = reason || 'Cancelled by user';
+    order.cancelledAt = new Date();
     await order.save();
-    return res.json({ success: true, message: 'Order cancelled', order });
+
+    return res.json({
+      success: true,
+      message: 'Order cancelled successfully',
+      order,
+      cancellationReason: order.cancellationReason
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Failed to cancel order' });
   }
