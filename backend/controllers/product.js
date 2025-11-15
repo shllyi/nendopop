@@ -199,3 +199,48 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Get Product Details with Reviews and Related Products
+exports.getProductDetailsWithExtras = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // Fetch the product
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // Fetch reviews for the product
+    const Review = require("../models/review");
+    const reviews = await Review.find({ productId })
+      .populate('userId', 'username avatar')
+      .sort({ createdAt: -1 });
+
+    // Fetch related products
+    let relatedProducts = [];
+    if (product.category) {
+      // Filter by category
+      relatedProducts = await Product.find({
+        category: product.category,
+        _id: { $ne: productId },
+        isArchived: false
+      }).limit(6);
+    } else {
+      // If no category, get all non-archived except current
+      relatedProducts = await Product.find({
+        _id: { $ne: productId },
+        isArchived: false
+      }).limit(6);
+    }
+
+    res.status(200).json({
+      success: true,
+      product,
+      reviews,
+      relatedProducts
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

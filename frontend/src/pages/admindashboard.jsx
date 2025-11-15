@@ -17,17 +17,29 @@ function AdminDashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Date filter states
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [dailyStartDate, setDailyStartDate] = useState('');
+  const [dailyEndDate, setDailyEndDate] = useState('');
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
+        // Build query parameters for date filtering
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
         // Fetch all dashboard data at once
-        const response = await apiClient.get('/api/v1/dashboard/all');
-        
+        const response = await apiClient.get(`/api/v1/dashboard/all?${params.toString()}`);
+
         console.log('Dashboard API Response:', response.data); // Debug log
-        
+
         if (response.data.success) {
           setDashboardData(response.data.data);
         } else {
@@ -42,7 +54,57 @@ function AdminDashboard({ user }) {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [startDate, endDate]);
+
+  // Separate effect for monthly sales year filtering
+  useEffect(() => {
+    const fetchMonthlySales = async () => {
+      try {
+        const params = new URLSearchParams();
+        const yearStart = new Date(selectedYear, 0, 1);
+        const yearEnd = new Date(selectedYear + 1, 0, 1);
+        params.append('startDate', yearStart.toISOString().split('T')[0]);
+        params.append('endDate', yearEnd.toISOString().split('T')[0]);
+
+        const response = await apiClient.get(`/api/v1/dashboard/monthly-sales?${params.toString()}`);
+        if (response.data.success) {
+          setDashboardData(prev => ({
+            ...prev,
+            monthlySales: response.data.salesData
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch monthly sales:', error);
+      }
+    };
+
+    fetchMonthlySales();
+  }, [selectedYear]);
+
+  // Separate effect for daily sales filtering
+  useEffect(() => {
+    const fetchDailySales = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (dailyStartDate) params.append('startDate', dailyStartDate);
+        if (dailyEndDate) params.append('endDate', dailyEndDate);
+
+        const response = await apiClient.get(`/api/v1/dashboard/daily-sales?${params.toString()}`);
+        if (response.data.success) {
+          setDashboardData(prev => ({
+            ...prev,
+            dailySales: response.data.dailySales
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch daily sales:', error);
+      }
+    };
+
+    if (dailyStartDate || dailyEndDate) {
+      fetchDailySales();
+    }
+  }, [dailyStartDate, dailyEndDate]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -178,6 +240,8 @@ function AdminDashboard({ user }) {
             <p className="text-center">Welcome back, <strong>{user?.username || 'Admin'}</strong> (Admin)</p>
             <p className="text-center mb-32">Email: {user?.email || ''}</p>
 
+
+
             {/* Stats Cards */}
             <div style={{ 
               display: 'grid', 
@@ -215,7 +279,22 @@ function AdminDashboard({ user }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               {/* Monthly Sales Chart */}
               <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: 'black' }}>Monthly Sales (Current Year)</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: 0, color: 'black' }}>Monthly Sales</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', fontWeight: 'bold' }}>Year:</label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - i;
+                        return <option key={year} value={year}>{year}</option>;
+                      })}
+                    </select>
+                  </div>
+                </div>
                 {monthlySales.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={monthlySales}>
@@ -236,17 +315,35 @@ function AdminDashboard({ user }) {
 
               {/* Daily Sales Chart */}
               <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ marginBottom: '16px', color: 'black' }}>Daily Sales (Last 30 Days)</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: 0, color: 'black' }}>Sales Overview</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', fontWeight: 'bold' }}>From:</label>
+                    <input
+                      type="date"
+                      value={dailyStartDate}
+                      onChange={(e) => setDailyStartDate(e.target.value)}
+                      style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
+                    />
+                    <label style={{ fontSize: '14px', fontWeight: 'bold' }}>To:</label>
+                    <input
+                      type="date"
+                      value={dailyEndDate}
+                      onChange={(e) => setDailyEndDate(e.target.value)}
+                      style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}
+                    />
+                  </div>
+                </div>
                 {dailySales.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={dailySales}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="_id" 
-                        tick={{ fontSize: 10 }} 
-                        angle={-45} 
-                        textAnchor="end" 
-                        height={80} 
+                      <XAxis
+                        dataKey="_id"
+                        tick={{ fontSize: 10 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
                       />
                       <YAxis />
                       <Tooltip formatter={(value) => `₱${value.toLocaleString()}`} />

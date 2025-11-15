@@ -60,13 +60,19 @@ exports.getDashboardStats = async (req, res) => {
 // Monthly Sales
 exports.getMonthlySales = async (req, res) => {
   try {
-    const currentYear = new Date().getFullYear();
+    const { startDate, endDate } = req.query;
+
+    // Default to current year if no dates provided
+    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate ? new Date(endDate) : new Date(new Date().getFullYear() + 1, 0, 1);
+    const year = start.getFullYear();
+
     const monthlySales = await Order.aggregate([
       {
         $match: {
           createdAt: {
-            $gte: new Date(currentYear, 0, 1),
-            $lt: new Date(currentYear + 1, 0, 1),
+            $gte: start,
+            $lt: end,
           },
           status: { $in: ["Completed", "Delivered"] },
         },
@@ -85,7 +91,7 @@ exports.getMonthlySales = async (req, res) => {
     const salesData = Array.from({ length: 12 }, (_, i) => {
       const monthData = monthlySales.find((item) => item._id === i + 1);
       return {
-        month: new Date(currentYear, i).toLocaleString("default", { month: "short" }),
+        month: new Date(year, i).toLocaleString("default", { month: "short" }),
         sales: monthData ? monthData.totalSales : 0,
       };
     });
@@ -224,36 +230,42 @@ exports.getRevenueByCategory = async (req, res) => {
   }
 };
 
-// Daily Sales (last 30 days)
-exports.getDailySales = async (req, res) => {
-  try {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  // Daily Sales (with date filter)
+  exports.getDailySales = async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
 
-    const dailySales = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: thirtyDaysAgo },
-          status: { $in: ["Completed", "Delivered"] },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+      let start = new Date();
+      start.setDate(start.getDate() - 30); // Default to last 30 days
+      let end = new Date();
+
+      if (startDate) start = new Date(startDate);
+      if (endDate) end = new Date(endDate);
+
+      const dailySales = await Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: start, $lte: end },
+            status: { $in: ["Completed", "Delivered"] },
           },
-          sales: { $sum: "$totalAmount" },
         },
-      },
-      { $sort: { "_id": 1 } },
-    ]);
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+            },
+            sales: { $sum: "$totalAmount" },
+          },
+        },
+        { $sort: { "_id": 1 } },
+      ]);
 
-    res.json({ success: true, dailySales });
-  } catch (error) {
-    console.error("❌ Failed to get daily sales:", error);
-    res.status(500).json({ success: false, message: "Failed to load daily sales" });
-  }
-};
+      res.json({ success: true, dailySales });
+    } catch (error) {
+      console.error("❌ Failed to get daily sales:", error);
+      res.status(500).json({ success: false, message: "Failed to load daily sales" });
+    }
+  };
 
 // Low Stock Products
 exports.getLowStockProducts = async (req, res) => {
@@ -276,9 +288,16 @@ exports.getLowStockProducts = async (req, res) => {
 // All Dashboard Data (consolidated) - FIXED VERSION
 exports.getAllDashboardData = async (req, res) => {
   try {
-    const currentYear = new Date().getFullYear();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { startDate, endDate } = req.query;
+
+    // Default to current year if no dates provided
+    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate ? new Date(endDate) : new Date(new Date().getFullYear() + 1, 0, 1);
+    const currentYear = start.getFullYear();
+
+    // For daily sales, use last 30 days if no custom dates
+    const thirtyDaysAgo = startDate ? start : new Date();
+    if (!startDate) thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     // Execute all queries in parallel
     const [
@@ -299,8 +318,8 @@ exports.getAllDashboardData = async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: new Date(currentYear, 0, 1),
-              $lt: new Date(currentYear + 1, 0, 1),
+              $gte: start,
+              $lt: end,
             },
             status: { $in: ["Completed", "Delivered"] },
           },
@@ -315,8 +334,8 @@ exports.getAllDashboardData = async (req, res) => {
       // Total orders
       Order.countDocuments({
         createdAt: {
-          $gte: new Date(currentYear, 0, 1),
-          $lt: new Date(currentYear + 1, 0, 1),
+          $gte: start,
+          $lt: end,
         },
         status: { $in: ["Completed", "Delivered"] },
       }),
@@ -329,8 +348,8 @@ exports.getAllDashboardData = async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: new Date(currentYear, 0, 1),
-              $lt: new Date(currentYear + 1, 0, 1),
+              $gte: start,
+              $lt: end,
             },
             status: { $in: ["Completed", "Delivered"] },
           },
@@ -348,8 +367,8 @@ exports.getAllDashboardData = async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: new Date(currentYear, 0, 1),
-              $lt: new Date(currentYear + 1, 0, 1),
+              $gte: start,
+              $lt: end,
             },
             status: { $in: ["Completed", "Delivered"] },
           },
@@ -382,8 +401,8 @@ exports.getAllDashboardData = async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: new Date(currentYear, 0, 1),
-              $lt: new Date(currentYear + 1, 0, 1),
+              $gte: start,
+              $lt: end,
             },
           },
         },
@@ -400,8 +419,8 @@ exports.getAllDashboardData = async (req, res) => {
         {
           $match: {
             createdAt: {
-              $gte: new Date(currentYear, 0, 1),
-              $lt: new Date(currentYear + 1, 0, 1),
+              $gte: start,
+              $lt: end,
             },
             status: { $in: ["Completed", "Delivered"] },
           },
@@ -428,7 +447,7 @@ exports.getAllDashboardData = async (req, res) => {
       Order.aggregate([
         {
           $match: {
-            createdAt: { $gte: thirtyDaysAgo },
+            createdAt: { $gte: startDate ? start : thirtyDaysAgo, $lte: endDate ? end : new Date() },
             status: { $in: ["Completed", "Delivered"] },
           },
         },

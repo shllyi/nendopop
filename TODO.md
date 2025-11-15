@@ -1,19 +1,2 @@
-# TODO: Create Comprehensive Admin Dashboard with Sales Metrics
-
-## Backend Implementation:
-- [ ] Create dashboard controller with all metrics functions
-- [ ] Add dashboard routes for all endpoints
-- [ ] Implement DashboardStats (total sales, orders, users, products)
-- [ ] Implement MostOrderedProducts
-- [ ] Implement CategoryDistribution
-- [ ] Implement OrderStatusDistribution
-- [ ] Implement RevenueByCategory
-- [ ] Implement DailySales
-- [ ] Implement LowStockProducts
-- [ ] Implement AllDashboardData (consolidated endpoint)
-
-## Frontend Implementation:
-- [ ] Update admin dashboard to fetch all metrics
-- [ ] Add multiple charts and stats displays
-- [ ] Ensure responsive design
-- [ ] Test all functionality
+- [x] Set fixed width: 330 and height: 550 on the Card sx in frontend/src/pages/home.jsx to ensure uniform size across all cards.
+- [x] Replace responsive Grid with fixed-width flexbox layout to ensure all cards are exactly 330x550.
