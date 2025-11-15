@@ -33,7 +33,9 @@ import {
   Badge,
   Fade,
   Zoom,
-  Tooltip
+  Tooltip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -127,6 +129,7 @@ export default function Home({ user }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
   const sentinelRef = useRef(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   const CarouselArrow = ({ direction, onClick }) => (
     <IconButton
@@ -175,11 +178,20 @@ export default function Home({ user }) {
     const existing = cart.find((item) => item._id === product._id);
     if (existing) {
       existing.quantity += 1;
+      setSnackbar({
+        open: true,
+        message: `Increased ${product.name} quantity in cart!`,
+        severity: "success"
+      });
     } else {
       cart.push({ ...product, quantity: 1 });
+      setSnackbar({
+        open: true,
+        message: `${product.name} added to cart! 🛒`,
+        severity: "success"
+      });
     }
     localStorage.setItem("cart", JSON.stringify(cart));
-    alert(`${product.name} added to cart 🛒`);
   };
 
   const handleView = (id) => {
@@ -781,6 +793,30 @@ export default function Home({ user }) {
           )}
         </Container>
         <Footer />
+
+        {/* Enhanced Snackbar Notification */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          sx={{ zIndex: 1400 }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{
+              width: '100%',
+              fontSize: '1rem',
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              borderRadius: 2,
+              minWidth: 300,
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   );

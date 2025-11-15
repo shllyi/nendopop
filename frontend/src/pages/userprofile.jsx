@@ -91,7 +91,8 @@ function UserProfile({ user }) {
 
   // 🧠 Load current user info
   useEffect(() => {
-    const currentUser = user || JSON.parse(localStorage.getItem("user") || "null");
+    // Always get the most current user data from localStorage
+    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
     if (currentUser) {
       setValue("username", currentUser.username || "");
       setValue("email", currentUser.email || "");
@@ -100,12 +101,17 @@ function UserProfile({ user }) {
       setValue("address", currentUser.address || "");
       setValue("phone", currentUser.phone || "");
       setValue("gender", currentUser.gender || "");
+      // For new users, only set avatar if they have uploaded one, otherwise leave empty
       const avatarUrl = currentUser?.avatar?.url || currentUser?.avatarUrl || "";
-      if (avatarUrl) setAvatarPreview(avatarUrl);
+      if (avatarUrl && avatarUrl !== 'https://res.cloudinary.com/dwfmkvikk/image/upload/v1761637373/product_images/chjth6dty9qmfbf7rg58.jpg') {
+        setAvatarPreview(avatarUrl);
+      } else {
+        setAvatarPreview(""); // Empty for new users or default avatar
+      }
     } else {
       navigate("/login");
     }
-  }, [user, navigate, setValue]);
+  }, [navigate, setValue]); // Removed 'user' from dependencies to prevent stale data
 
   // 🧩 Convert file → base64
   const fileToBase64 = (file) =>

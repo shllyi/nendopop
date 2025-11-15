@@ -60,9 +60,10 @@ export default function ChangePasswordOtp({ user }) {
   const [otpError, setOtpError] = useState('');
 
   useEffect(() => {
-    const currentUser = user || JSON.parse(localStorage.getItem('user') || 'null');
+    // Always get the most current user data from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
     if (currentUser?.email) setEmail(currentUser.email);
-  }, [user]);
+  }, []); // Removed 'user' from dependencies to prevent stale data
 
   // Client-side validations
   useEffect(() => {
