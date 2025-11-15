@@ -1,5 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#ff8c00",
+      light: "#ffa500",
+      dark: "#e67e00",
+      contrastText: "#fff",
+    },
+    secondary: {
+      main: "#ffa500",
+    },
+    background: {
+      default: "#fff8f0",
+      paper: "#ffffff",
+    },
+    success: {
+      main: "#4caf50",
+    },
+    error: {
+      main: "#f44336",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+});
 
 export default function ChangePasswordOtp({ user }) {
   const [email, setEmail] = useState('');
@@ -82,94 +125,183 @@ export default function ChangePasswordOtp({ user }) {
   };
 
   return (
-    <div style={{ maxWidth: 520 }}>
-      <h2 className="mb-16">Change Password</h2>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ maxWidth: 520, mx: "auto" }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: "#ff8c00", mb: 3, textAlign: "center" }}>
+          Change Password
+        </Typography>
 
-      <label>
-        Email
-        <input className="input" value={email} readOnly disabled placeholder="Email" />
-      </label>
+        <TextField
+          fullWidth
+          label="Email"
+          value={email}
+          InputProps={{ readOnly: true }}
+          sx={{
+            mb: 3,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "#ff8c00",
+              },
+            },
+          }}
+        />
 
-      <label>
-        Current Password
-        <input
+        <TextField
+          fullWidth
+          label="Current Password"
           type="password"
-          className="input"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          placeholder="Enter current password"
+          error={!!errors.current}
+          helperText={errors.current}
+          sx={{
+            mb: 3,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "#ff8c00",
+              },
+              "&:hover fieldset": {
+                borderColor: "#e67e00",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#ff8c00",
+              },
+            },
+          }}
         />
-        {errors.current && <span style={{ color: '#e74c3c', fontSize: 12 }}>{errors.current}</span>}
-      </label>
 
-      <label>
-        New Password
-        <input
+        <TextField
+          fullWidth
+          label="New Password"
           type="password"
-          className="input"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="At least 8 characters"
+          error={!!errors.next}
+          helperText={errors.next}
+          sx={{
+            mb: 3,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "#ff8c00",
+              },
+              "&:hover fieldset": {
+                borderColor: "#e67e00",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#ff8c00",
+              },
+            },
+          }}
         />
-        {errors.next && <span style={{ color: '#e74c3c', fontSize: 12 }}>{errors.next}</span>}
-      </label>
 
-      <label>
-        Confirm New Password
-        <input
+        <TextField
+          fullWidth
+          label="Confirm New Password"
           type="password"
-          className="input"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Re-enter new password"
-        />
-        {errors.confirm && <span style={{ color: '#e74c3c', fontSize: 12 }}>{errors.confirm}</span>}
-      </label>
-
-      <button
-        className="btn mt-16"
-        onClick={handleRequestOtp}
-        disabled={!formValid || loading}
-        style={{ opacity: !formValid || loading ? 0.6 : 1, cursor: !formValid || loading ? 'not-allowed' : 'pointer' }}
-      >
-        {loading ? 'Processing...' : 'Change Password'}
-      </button>
-
-      {status && <p className="mt-16" style={{ fontSize: '0.9rem' }}>{status}</p>}
-
-      {/* OTP Modal */}
-      {showModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+          error={!!errors.confirm}
+          helperText={errors.confirm}
+          sx={{
+            mb: 3,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "#ff8c00",
+              },
+              "&:hover fieldset": {
+                borderColor: "#e67e00",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#ff8c00",
+              },
+            },
           }}
-          onClick={() => setShowModal(false)}
+        />
+
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={handleRequestOtp}
+          disabled={!formValid || loading}
+          sx={{
+            backgroundColor: "#ff8c00",
+            py: 1.5,
+            fontSize: "1rem",
+            "&:hover": { backgroundColor: "#e67e00" },
+            "&:disabled": { backgroundColor: "#ccc" },
+          }}
         >
-          <div
-            style={{ background: '#1e1e1e', color: '#fff', padding: 20, borderRadius: 8, width: 360 }}
-            onClick={(e) => e.stopPropagation()}
+          {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Change Password"}
+        </Button>
+
+        {status && (
+          <Alert
+            severity={status.includes("successfully") ? "success" : "error"}
+            sx={{ mt: 3 }}
           >
-            <h3>Enter OTP</h3>
-            <p style={{ fontSize: 13, color: '#bbb' }}>An OTP was sent to your email. Enter the code below.</p>
-            <form className="col" onSubmit={verifyOtpAndChange}>
-              <input
-                className="input"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="6-digit code"
-                autoFocus
-              />
-              {otpError && <span style={{ color: '#e74c3c', fontSize: 12 }}>{otpError}</span>}
-              <div className="row" style={{ gap: 8, marginTop: 12 }}>
-                <button className="btn" type="submit" disabled={loading || !otp}>
-                  {loading ? 'Verifying...' : 'Verify'}
-                </button>
-                <button type="button" className="btn" style={{ background: '#555' }} onClick={() => setShowModal(false)}>Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+            {status}
+          </Alert>
+        )}
+
+        {/* OTP Dialog */}
+        <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ color: "#ff8c00", fontWeight: 600 }}>
+            Enter OTP
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+              An OTP was sent to your email. Enter the code below.
+            </Typography>
+            <TextField
+              fullWidth
+              label="6-digit code"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              error={!!otpError}
+              helperText={otpError}
+              autoFocus
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "#ff8c00",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#e67e00",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#ff8c00",
+                  },
+                },
+              }}
+            />
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={() => setShowModal(false)}
+              variant="outlined"
+              sx={{
+                borderColor: "#ff8c00",
+                color: "#ff8c00",
+                "&:hover": { borderColor: "#e67e00", bgcolor: "#fff3e0" },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={verifyOtpAndChange}
+              variant="contained"
+              disabled={loading || !otp}
+              sx={{
+                backgroundColor: "#ff8c00",
+                "&:hover": { backgroundColor: "#e67e00" },
+                "&:disabled": { backgroundColor: "#ccc" },
+              }}
+            >
+              {loading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Verify"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </ThemeProvider>
   );
 }
