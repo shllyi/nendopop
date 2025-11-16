@@ -1,12 +1,11 @@
-# TODO: Update products.jsx Color Palette to Match users.jsx
-
-## Tasks
-- [ ] Wrap main content in ThemeProvider and Box with gradient background (linear-gradient(135deg, #fff8f0 0%, #ffe4cc 50%, #ffd6b3 100%))
-- [ ] Update main card to have light background (#ffffff) and proper elevation
-- [ ] Change modal background from dark (#111) to light (#ffffff)
-- [ ] Update table styles to light theme with hover effects and proper colors
-- [ ] Ensure overall layout matches users.jsx aesthetic
-
-## Followup Steps
-- [ ] Test the updated products.jsx page visually to ensure it matches users.jsx
-- [ ] Verify no functionality is broken
+- [ ] Import MUI components and create theme similar to cart.jsx
+- [ ] Wrap component in ThemeProvider
+- [ ] Replace custom buttons with MUI Button
+- [ ] Replace custom inputs with MUI TextField
+- [ ] Replace custom modal with MUI Dialog
+- [ ] Replace custom table with MUI Table
+- [ ] Replace custom tabs with MUI Tabs
+- [ ] Improve status notification with MUI Snackbar
+- [ ] Remove unnecessary inline styles and custom classes
+- [ ] Add minimal comments for important info
+- [ ] Test functionality remains intact
