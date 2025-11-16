@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Box, Typography } from "@mui/material";
 import Login from "./components/login";
 import Register from "./components/register";
 import Home from "./pages/home";
@@ -21,13 +22,40 @@ import UserReviews from "./pages/userreviews";
 
 function App() {
   const [user, setUser] = useState(null);
-  // use window.location to preserve redirect target when user is not authenticated
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const storedToken = localStorage.getItem("token");
+
+    if (storedUser && storedToken) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        // Invalid stored user data, clear it
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
+    }
+    setLoading(false);
   }, []);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#fff8f0'
+        }}
+      >
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Router>
