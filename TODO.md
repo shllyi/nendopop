@@ -1,7 +1,6 @@
-- [ ] Import MUI components and create theme similar to cart.jsx
-- [ ] Wrap component in ThemeProvider
+- [ ] Wrap component in ThemeProvider with orange theme
 - [ ] Replace custom buttons with MUI Button
-- [ ] Replace custom inputs with MUI TextField
+- [ ] Replace custom inputs with MUI TextField and Select
 - [ ] Replace custom modal with MUI Dialog
 - [ ] Replace custom table with MUI Table
 - [ ] Replace custom tabs with MUI Tabs

@@ -36,6 +36,7 @@ import {
   IconButton,
   Grid,
   Fade,
+  Snackbar,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import AddIcon from '@mui/icons-material/Add';
@@ -45,6 +46,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import CloseIcon from '@mui/icons-material/Close';
 
+// Theme matching cart.jsx orange/light palette
 const theme = createTheme({
   palette: {
     primary: {
@@ -111,25 +113,25 @@ function Products({ user }) {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [removedImageIds, setRemovedImageIds] = useState(new Set());
-  const [status, setStatus] = useState("");
-  const [activeTab, setActiveTab] = useState('active');
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, []);
 
-  // ✅ Fetch all products
+  // Fetch all products (including archived for admin)
   const fetchProducts = async () => {
     try {
-      const { data } = await apiClient.get("/api/v1/products");
+      const { data } = await apiClient.get("/api/v1/products/all");
       setProducts(data.products || []);
     } catch (e) {
-      setStatus("Failed to load products");
+      showSnackbar("Failed to load products", "error");
     }
   };
 
-  // ✅ Fetch stored categories
+  // Fetch stored categories
   const fetchCategories = async () => {
     try {
       const { data } = await apiClient.get("/api/v1/categories");
@@ -137,6 +139,10 @@ function Products({ user }) {
     } catch (e) {
       console.error("Failed to load categories", e);
     }
+  };
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
   };
 
   const handleLogout = () => {
@@ -188,7 +194,6 @@ function Products({ user }) {
     setImageFiles([]);
     setImagePreviews([]);
     setEditProduct(null);
-    setStatus("");
   };
 
   const handleImagesChange = (e) => {
@@ -206,7 +211,7 @@ function Products({ user }) {
     });
 
   const onSubmit = async (data) => {
-    setStatus("Saving...");
+    showSnackbar("Saving...", "info");
     try {
       let imagesBase64 = [];
       if (imageFiles.length > 0) {
@@ -228,348 +233,380 @@ function Products({ user }) {
           `/api/v1/products/${editProduct._id}`,
           payload
         );
-        setStatus("Product updated ✅");
+        showSnackbar("Product updated", "success");
       } else {
         await apiClient.post("/api/v1/products", payload);
-        setStatus("Product added ✅");
+        showSnackbar("Product added", "success");
       }
       fetchProducts();
       closeModal();
     } catch (err) {
-      setStatus(err.response?.data?.message || "Save failed");
+      showSnackbar(err.response?.data?.message || "Save failed", "error");
     }
   };
 
   const toggleArchive = async (product) => {
-    setStatus("Archiving...");
+    showSnackbar("Processing...", "info");
     try {
       await apiClient.put(
         `/api/v1/products/${product._id}/archive`
       );
       fetchProducts();
-      setStatus(product.isArchived ? "Restored ✅" : "Archived ✅");
+      showSnackbar(product.isArchived ? "Restored" : "Archived", "success");
     } catch (err) {
-      setStatus("Archive failed");
+      showSnackbar("Archive failed", "error");
     }
   };
 
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   return (
-    <div>
-      <AdminHeader
-        onLogout={handleLogout}
-        onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
-      />
-      {isSidebarOpen && (
-        <div className="backdrop" onClick={() => setIsSidebarOpen(false)} />
-      )}
-      <div className="row" style={{ alignItems: "flex-start" }}>
-        <AdminSidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
+    <ThemeProvider theme={theme}>
+      <Box sx={{ backgroundColor: "background.default", minHeight: "100vh" }}>
+        <AdminHeader
           onLogout={handleLogout}
+          onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
         />
-        <main className="container" style={{ padding: 16 }}>
-          <div
-            className="card col"
-            style={{ maxWidth: 900, margin: "32px auto" }}
-          >
-            <h1 className="text-center mb-16">Product Management</h1>
-            <button className="btn mb-16" onClick={openAddModal}>
-              Add Product
-            </button>
-            <div style={{ marginLeft: 8 }}>
-              <button
-                className="btn mb-16 outline"
-                onClick={() => setActiveTab(activeTab === 'archived' ? 'active' : 'archived')}
-              >
-                {activeTab === 'archived' ? 'Back to Products' : 'Archived Products'}
-              </button>
-            </div>
-            {status && <p style={{ color: "#f99" }}>{status}</p>}
+        {isSidebarOpen && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              zIndex: 1,
+            }}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+          <AdminSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            onLogout={handleLogout}
+          />
+          <Box sx={{ flex: 1, p: 2 }}>
+            <Card sx={{ maxWidth: 1000, mx: "auto", mt: 4 }}>
+              <CardContent>
+                <Typography variant="h4" align="center" gutterBottom>
+                  Product Management
+                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                  <Tabs value={activeTab} onChange={handleTabChange}>
+                    <Tab label="Active" />
+                    <Tab label="Archived" />
+                  </Tabs>
+                  <Button variant="contained" startIcon={<AddIcon />} onClick={openAddModal} sx={{ backgroundColor: "#ff8c00", '&:hover': { backgroundColor: "#e67e00" } }}>
+                    Add Product
+                  </Button>
+                </Box>
 
-            {activeTab === 'active' && (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ background: "#111", borderBottom: "1px solid #333" }}>
-                      <th>Name</th>
-                      <th>Category</th>
-                      <th>Price</th>
-                      <th>Stock</th>
-                      <th>Images</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products
-                      .filter((p) => !p.isArchived)
-                      .map((p) => (
-                        <tr key={p._id} style={{ borderBottom: "1px solid #222" }}>
-                          <td>{p.name}</td>
-                          <td>{p.category}</td>
-                          <td>{p.price}</td>
-                          <td>{p.stock}</td>
-                          <td style={{ minWidth: 96 }}>
-                            <div className="row" style={{ gap: 2 }}>
-                              {p.images &&
-                                p.images.map((img, i) => (
-                                  <img
-                                    key={i}
-                                    src={img.url}
-                                    alt=""
-                                    style={{
-                                      width: 48,
-                                      height: 48,
-                                      objectFit: "cover",
-                                      borderRadius: 4,
-                                      border: "1px solid #333",
-                                    }}
-                                  />
-                                ))}
-                            </div>
-                          </td>
-                          <td>
-                            <button
-                              className="btn outline"
-                              onClick={() => openEditModal(p)}
-                              style={{ marginRight: 4 }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="btn outline"
-                              onClick={() => toggleArchive(p)}
-                            >
-                              Archive
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                {activeTab === 0 && (
+                  <TableContainer component={Paper}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Category</TableCell>
+                          <TableCell>Price</TableCell>
+                          <TableCell>Stock</TableCell>
+                          <TableCell>Images</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {products
+                          .filter((p) => !p.isArchived)
+                          .map((p) => (
+                            <TableRow key={p._id}>
+                              <TableCell sx={{ verticalAlign: 'bottom' }}>{p.name}</TableCell>
+                              <TableCell sx={{ verticalAlign: 'bottom' }}>{p.category}</TableCell>
+                              <TableCell sx={{ verticalAlign: 'bottom' }}>₱{p.price}</TableCell>
+                              <TableCell sx={{ verticalAlign: 'bottom' }}>{p.stock}</TableCell>
+                              <TableCell>
+                                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                                  {p.images &&
+                                    p.images.slice(0, 3).map((img, i) => (
+                                      <Avatar
+                                        key={i}
+                                        src={img.url}
+                                        alt=""
+                                        sx={{ width: 48, height: 48, cursor: "pointer" }}
+                                        variant="rounded"
+                                        onClick={() => window.open(img.url, '_blank')}
+                                      />
+                                    ))}
+                                  {p.images && p.images.length > 3 && (
+                                    <Typography variant="body2" color="text.secondary" sx={{ cursor: "pointer" }} onClick={() => {
+                                      // Open all extra images in new tabs
+                                      const extraImages = p.images.slice(3);
+                                      extraImages.forEach(img => window.open(img.url, '_blank'));
+                                    }}>
+                                      +{p.images.length - 3} more
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                  <Button size="small" onClick={() => openEditModal(p)} sx={{ boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
+                                    Edit
+                                  </Button>
+                                  <Button size="small" onClick={() => toggleArchive(p)} sx={{ boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
+                                    Archive
+                                  </Button>
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
 
-            {activeTab === 'archived' && (
-              <div style={{ overflowX: "auto" }}>
-                <h2 className="mb-16">Archived Products</h2>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ background: "#111", borderBottom: "1px solid #333" }}>
-                      <th>Name</th>
-                      <th>Category</th>
-                      <th>Price</th>
-                      <th>Stock</th>
-                      <th>Images</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products
-                      .filter((p) => p.isArchived)
-                      .map((p) => (
-                        <tr key={p._id} style={{ borderBottom: "1px solid #222" }}>
-                          <td>{p.name}</td>
-                          <td>{p.category}</td>
-                          <td>{p.price}</td>
-                          <td>{p.stock}</td>
-                          <td style={{ minWidth: 96 }}>
-                            <div className="row" style={{ gap: 2 }}>
-                              {p.images &&
-                                p.images.map((img, i) => (
-                                  <img
-                                    key={i}
-                                    src={img.url}
-                                    alt=""
-                                    style={{
-                                      width: 48,
-                                      height: 48,
-                                      objectFit: "cover",
-                                      borderRadius: 4,
-                                      border: "1px solid #333",
-                                    }}
-                                  />
-                                ))}
-                            </div>
-                          </td>
-                          <td>
-                            <button className="btn outline" onClick={() => toggleArchive(p)}>Restore</button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                {activeTab === 1 && (
+                  <TableContainer component={Paper}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Category</TableCell>
+                          <TableCell>Price</TableCell>
+                          <TableCell>Stock</TableCell>
+                          <TableCell>Images</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {products
+                          .filter((p) => p.isArchived)
+                          .map((p) => (
+                            <TableRow key={p._id}>
+                              <TableCell>{p.name}</TableCell>
+                              <TableCell>{p.category}</TableCell>
+                              <TableCell>₱{p.price}</TableCell>
+                              <TableCell>{p.stock}</TableCell>
+                              <TableCell>
+                                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                                  {p.images &&
+                                    p.images.slice(0, 3).map((img, i) => (
+                                      <Avatar
+                                        key={i}
+                                        src={img.url}
+                                        alt=""
+                                        sx={{ width: 48, height: 48, cursor: "pointer" }}
+                                        variant="rounded"
+                                        onClick={() => window.open(img.url, '_blank')}
+                                      />
+                                    ))}
+                                  {p.images && p.images.length > 3 && (
+                                    <Typography variant="body2" color="text.secondary" sx={{ cursor: "pointer" }} onClick={() => {
+                                      // Open all extra images in new tabs
+                                      const extraImages = p.images.slice(3);
+                                      extraImages.forEach(img => window.open(img.url, '_blank'));
+                                    }}>
+                                      +{p.images.length - 3} more
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Button size="small" onClick={() => toggleArchive(p)}>
+                                  Restore
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
 
-            {/* Modal */}
-            {modalOpen && (
-              <>
-                <div
-                  className="backdrop"
-                  style={{ zIndex: 99 }}
-                  onClick={closeModal}
-                />
-                <div
-                  className="card col"
-                  style={{
-                    zIndex: 100,
-                    position: "fixed",
-                    top: "10%",
-                    left: 0,
-                    right: 0,
-                    maxWidth: 420,
-                    margin: "auto",
-                    background: "#111",
-                    border: "2px solid #444",
-                  }}
-                >
-                  <h2>{editProduct ? "Edit Product" : "Add Product"}</h2>
-                  <form onSubmit={handleSubmit(onSubmit)} className="col">
-                    <label>
-                      Name
-                      <input
-                        {...register("name")}
-                        className="input"
-                      />
-                      {errors.name && <p style={{ color: "#f99", fontSize: "0.875rem" }}>{errors.name.message}</p>}
-                    </label>
-
-                    <label>
-                      Description
-                      <input
-                        {...register("description")}
-                        className="input"
-                      />
-                    </label>
-
-                    {/* ✅ Dropdown for Category */}
-                    <label>
-                      Category
-                      <select
-                        {...register("category")}
-                        className="input"
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map((cat) => (
-                          <option key={cat._id} value={cat.name}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.category && <p style={{ color: "#f99", fontSize: "0.875rem" }}>{errors.category.message}</p>}
-                    </label>
-
-                    <label>
-                      Price
-                      <input
-                        {...register("price")}
-                        type="number"
-                        className="input"
-                        min="0"
-                      />
-                      {errors.price && <p style={{ color: "#f99", fontSize: "0.875rem" }}>{errors.price.message}</p>}
-                    </label>
-
-                    <label>
-                      Stock
-                      <input
-                        {...register("stock")}
-                        type="number"
-                        className="input"
-                        min="0"
-                        step="1"
-                      />
-                      {errors.stock && <p style={{ color: "#f99", fontSize: "0.875rem" }}>{errors.stock.message}</p>}
-                    </label>
-
-                    <label>
-                      Specifications
-                      <textarea
-                        {...register("specifications")}
-                        className="input"
-                        placeholder="Add product specifications (features, dimensions, materials)..."
-                        rows={4}
-                      />
-                    </label>
-
-                    <label>
-                      Images
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImagesChange}
-                        className="input"
-                      />
-                    </label>
-
-                    <div
-                      className="row"
-                      style={{
-                        gap: 4,
-                        flexWrap: "wrap",
-                        minHeight: 48,
-                      }}
-                    >
-                      {(imagePreviews.length > 0
-                          ? imagePreviews
-                          : []
-                      ).map((src, i) => (
-                        <img
-                          key={i}
-                          src={src}
-                          alt="preview"
-                          style={{
-                            width: 48,
-                            height: 48,
-                            objectFit: "cover",
-                            borderRadius: 4,
-                            border: "1px solid #333",
-                          }}
+                <Dialog open={modalOpen} onClose={closeModal}>
+                  <DialogTitle>{editProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+                  <DialogContent>
+                    <Grid container spacing={2}>
+                      {/* Row 1: Name and Category */}
+                      <Grid item xs={6}>
+                        <TextField
+                          label="Name"
+                          {...register("name")}
+                          error={!!errors.name}
+                          helperText={errors.name?.message}
+                          margin="dense"
                         />
-                      ))}
-                        {/* Existing images when editing (with remove checkboxes) */}
-                        {(existingImages || []).map((img) => (
-                          <div key={img.public_id} style={{ display: 'inline-block', position: 'relative', marginRight: 6 }}>
-                            <img src={img.url} alt="existing" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, border: '1px solid #333' }} />
-                            <label style={{ display: 'block', fontSize: 11, textAlign: 'center' }}>
-                              <input type="checkbox" checked={removedImageIds.has(img.public_id)} onChange={(e) => {
-                                const next = new Set(removedImageIds);
-                                if (e.target.checked) next.add(img.public_id); else next.delete(img.public_id);
-                                setRemovedImageIds(next);
-                              }} /> Remove
-                            </label>
-                          </div>
-                        ))}
-                    </div>
-
-                    <button className="btn mt-16" type="submit">
+                      </Grid>
+                      <Grid item xs={6}>
+                        <FormControl fullWidth margin="dense">
+                          <InputLabel>Category</InputLabel>
+                          <Select maxWidth="lg"
+                            {...register("category")}
+                            error={!!errors.category}
+                          >
+                            <MenuItem value="">
+                              <em>Select Category</em>
+                            </MenuItem>
+                            {categories.map((cat) => (
+                              <MenuItem key={cat._id} value={cat.name}>
+                                {cat.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          {errors.category && (
+                            <Typography variant="caption" color="error">
+                              {errors.category.message}
+                            </Typography>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      {/* Row 2: Price and Stock */}
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Price"
+                          type="number"
+                          {...register("price")}
+                          error={!!errors.price}
+                          helperText={errors.price?.message}
+                          margin="dense"
+                          InputProps={{ startAdornment: "₱" }}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Stock"
+                          type="number"
+                          {...register("stock")}
+                          error={!!errors.stock}
+                          helperText={errors.stock?.message}
+                          margin="dense"
+                        />
+                      </Grid>
+                      {/* Row 3: Description */}
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Description"
+                          {...register("description")}
+                          margin="dense"
+                          multiline
+                          rows={2}
+                        />
+                      </Grid>
+                      {/* Row 4: Specifications */}
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Specifications"
+                          {...register("specifications")}
+                          margin="dense"
+                          multiline
+                          rows={3}
+                          placeholder="Add product specifications (features, dimensions, materials)..."
+                        />
+                      </Grid>
+                      {/* Row 5: Upload Images */}
+                      <Grid item xs={12}>
+                        <Button
+                          variant="outlined"
+                          component="label"
+                          fullWidth
+                          sx={{ mt: 1 }}
+                        >
+                          Upload Images
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            hidden
+                            onChange={handleImagesChange}
+                          />
+                        </Button>
+                      </Grid>
+                      {/* Image Previews */}
+                      <Grid item xs={12}>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+                          {imagePreviews.map((src, i) => (
+                            <Avatar
+                              key={i}
+                              src={src}
+                              alt="preview"
+                              sx={{ width: 64, height: 64 }}
+                              variant="rounded"
+                            />
+                          ))}
+                          {existingImages.map((img) => (
+                            <Box key={img.public_id} sx={{ position: "relative" }}>
+                              <Avatar
+                                src={img.url}
+                                alt="existing"
+                                sx={{ width: 64, height: 64 }}
+                                variant="rounded"
+                              />
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  position: "absolute",
+                                  top: -8,
+                                  right: -8,
+                                  backgroundColor: "rgba(255,255,255,0.8)",
+                                }}
+                                onClick={() => {
+                                  const next = new Set(removedImageIds);
+                                  if (next.has(img.public_id)) {
+                                    next.delete(img.public_id);
+                                  } else {
+                                    next.add(img.public_id);
+                                  }
+                                  setRemovedImageIds(next);
+                                }}
+                              >
+                                {removedImageIds.has(img.public_id) ? (
+                                  <RestoreIcon color="error" />
+                                ) : (
+                                  <CloseIcon color="error" />
+                                )}
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={closeModal}>Cancel</Button>
+                    <Button onClick={handleSubmit(onSubmit)} variant="contained">
                       {editProduct ? "Save Changes" : "Add Product"}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn outline"
-                      onClick={closeModal}
-                    >
-                      Cancel
-                    </button>
-                    {status && (
-                      <p
-                        className="text-center mt-16"
-                        style={{ fontSize: "0.875rem", color: "#f99" }}
-                      >
-                        {status}
-                      </p>
-                    )}
-                  </form>
-                </div>
-              </>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+
+
+                <Snackbar
+                  open={snackbar.open}
+                  autoHideDuration={3000}
+                  onClose={() => setSnackbar({ ...snackbar, open: false })}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                  <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    variant="filled"
+                  >
+                    {snackbar.message}
+                  </Alert>
+                </Snackbar>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
 

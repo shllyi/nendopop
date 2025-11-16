@@ -17,9 +17,15 @@ const isAuthenticated = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Attach minimal user info to request. Fetch isAdmin flag once to simplify downstream checks.
-    const user = await User.findById(decoded.id).select('isAdmin');
-    req.user = { id: decoded.id, isAdmin: user ? user.isAdmin : false };
+    // Attach minimal user info to request. Fetch isAdmin flag and check deactivation status
+    const user = await User.findById(decoded.id).select('isAdmin isActive');
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: 'Your account has been deactivated. Please contact support.' });
+    }
+    req.user = { id: decoded.id, isAdmin: user.isAdmin };
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Invalid or expired token' });

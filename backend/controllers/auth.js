@@ -44,6 +44,11 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
+    // Check if user account is deactivated
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: 'Your account has been deactivated. Please contact support.' });
+    }
+
     sendToken(user, 200, res);
   } catch (error) {
     console.error('Login error:', error.message);
