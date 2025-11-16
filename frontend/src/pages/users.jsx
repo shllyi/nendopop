@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+  import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import apiClient from "../api/client";
 import AdminHeader from "../components/AdminHeader";
@@ -9,19 +9,12 @@ import {
   CardContent,
   Typography,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Avatar,
   Chip,
   Alert,
-  CircularProgress,
-  Fade,
+  Snackbar,
 } from "@mui/material";
+import { DataGrid } from '@mui/x-data-grid';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import PersonIcon from '@mui/icons-material/Person';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -74,7 +67,7 @@ const theme = createTheme({
 function Users() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  const [status, setStatus] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -86,16 +79,21 @@ function Users() {
       const { data } = await apiClient.get("/api/v1/users");
       setUsers(data.users || []);
     } catch (e) {
-      setStatus("Failed to load users");
+      showSnackbar("Failed to load users", "error");
     }
+  };
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
   };
 
   const toggleActive = async (id) => {
     try {
       await apiClient.put(`/api/v1/users/${id}/toggle-active`);
       fetchUsers();
+      showSnackbar("User status updated", "success");
     } catch {
-      setStatus("Activation error");
+      showSnackbar("Activation error", "error");
     }
   };
 
@@ -103,32 +101,119 @@ function Users() {
     try {
       await apiClient.put(`/api/v1/users/${id}/toggle-role`);
       fetchUsers();
+      showSnackbar("User role updated", "success");
     } catch {
-      setStatus("Role change error");
+      showSnackbar("Role change error", "error");
     }
   };
 
-  // Helper: avatar or fallback
-  const renderAvatar = (user) => {
-    const avatarUrl = user?.avatar?.url || user?.avatarUrl;
-    const initials = user?.username?.[0]?.toUpperCase() || "?";
+  // DataGrid columns configuration
+  const columns = [
+    {
+      field: 'avatar',
+      headerName: 'Avatar',
+      width: 80,
+      renderCell: (params) => {
+        const avatarUrl = params.row?.avatar?.url || params.row?.avatarUrl;
+        const initials = params.row?.username?.[0]?.toUpperCase() || "?";
 
-    return (
-      <Avatar
-        src={avatarUrl}
-        alt={user.username}
-        sx={{
-          width: 48,
-          height: 48,
-          bgcolor: avatarUrl ? 'transparent' : '#ff8c00',
-          color: 'white',
-          fontWeight: 'bold',
-        }}
-      >
-        {!avatarUrl && initials}
-      </Avatar>
-    );
-  };
+        return (
+          <Avatar
+            src={avatarUrl}
+            alt={params.row.username}
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: avatarUrl ? 'transparent' : '#ff8c00',
+              color: 'white',
+              fontWeight: 'bold',
+            }}
+          >
+            {!avatarUrl && initials}
+          </Avatar>
+        );
+      },
+    },
+    {
+      field: 'username',
+      headerName: 'Username',
+      width: 150,
+      renderCell: (params) => (
+        <Typography fontWeight={500}>{params.value}</Typography>
+      ),
+    },
+    {
+      field: 'email',
+      headerName: 'Email',
+      width: 200,
+    },
+    {
+      field: 'isAdmin',
+      headerName: 'Role',
+      width: 120,
+      renderCell: (params) => (
+        <Chip
+          icon={params.value ? <AdminPanelSettingsIcon /> : <PersonIcon />}
+          label={params.value ? "Admin" : "User"}
+          color={params.value ? "primary" : "default"}
+          size="small"
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      field: 'isActive',
+      headerName: 'Status',
+      width: 120,
+      renderCell: (params) => (
+        <Chip
+          icon={params.value ? <CheckCircleIcon /> : <CancelIcon />}
+          label={params.value ? "Active" : "Deactivated"}
+          color={params.value ? "success" : "error"}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 250,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => toggleActive(params.row._id)}
+            sx={{
+              borderColor: params.row.isActive ? "#f44336" : "#4caf50",
+              color: params.row.isActive ? "#f44336" : "#4caf50",
+              '&:hover': {
+                borderColor: params.row.isActive ? "#d32f2f" : "#388e3c",
+                backgroundColor: params.row.isActive ? "#ffebee" : "#e8f5e8",
+              },
+            }}
+          >
+            {params.row.isActive ? "Deactivate" : "Activate"}
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => toggleRole(params.row._id)}
+            sx={{
+              borderColor: "#ff8c00",
+              color: "#ff8c00",
+              '&:hover': {
+                borderColor: "#e67e00",
+                backgroundColor: "#fff3e0",
+              },
+            }}
+          >
+            Change Role
+          </Button>
+        </Box>
+      ),
+    },
+  ];
 
   return (
     <ThemeProvider theme={theme}>
@@ -172,107 +257,37 @@ function Users() {
                   </Typography>
                 </Box>
 
-                {status && (
-                  <Alert
-                    severity={status.includes("error") ? "error" : "info"}
-                    sx={{ mb: 3 }}
-                  >
-                    {status}
-                  </Alert>
-                )}
-
-                <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: "#fff8f0" }}>
-                        <TableCell sx={{ fontWeight: 600, color: "#ff8c00" }}>Avatar</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#ff8c00" }}>Username</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#ff8c00" }}>Email</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#ff8c00" }}>Role</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#ff8c00" }}>Status</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: "#ff8c00" }}>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {users.length > 0 ? (
-                        users.map((u) => (
-                          <TableRow
-                            key={u._id}
-                            sx={{
-                              '&:hover': { backgroundColor: '#fff8f0' },
-                              transition: 'background-color 0.2s'
-                            }}
-                          >
-                            <TableCell sx={{ textAlign: "center" }}>
-                              {renderAvatar(u)}
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 500 }}>{u.username}</TableCell>
-                            <TableCell>{u.email}</TableCell>
-                            <TableCell>
-                              <Chip
-                                icon={u.isAdmin ? <AdminPanelSettingsIcon /> : <PersonIcon />}
-                                label={u.isAdmin ? "Admin" : "User"}
-                                color={u.isAdmin ? "primary" : "default"}
-                                size="small"
-                                variant="outlined"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                icon={u.isActive ? <CheckCircleIcon /> : <CancelIcon />}
-                                label={u.isActive ? "Active" : "Deactivated"}
-                                color={u.isActive ? "success" : "error"}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={() => toggleActive(u._id)}
-                                  sx={{
-                                    borderColor: u.isActive ? "#f44336" : "#4caf50",
-                                    color: u.isActive ? "#f44336" : "#4caf50",
-                                    '&:hover': {
-                                      borderColor: u.isActive ? "#d32f2f" : "#388e3c",
-                                      backgroundColor: u.isActive ? "#ffebee" : "#e8f5e8",
-                                    },
-                                  }}
-                                >
-                                  {u.isActive ? "Deactivate" : "Activate"}
-                                </Button>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={() => toggleRole(u._id)}
-                                  sx={{
-                                    borderColor: "#ff8c00",
-                                    color: "#ff8c00",
-                                    '&:hover': {
-                                      borderColor: "#e67e00",
-                                      backgroundColor: "#fff3e0",
-                                    },
-                                  }}
-                                >
-                                  Change Role
-                                </Button>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} sx={{ textAlign: "center", py: 6 }}>
-                            <Typography color="text.secondary" variant="h6">
-                              No users found
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                <Box sx={{ height: 600, width: '100%' }}>
+                  <DataGrid
+                    rows={users}
+                    columns={columns}
+                    getRowId={(row) => row._id}
+                    pageSize={10}
+                    rowsPerPageOptions={[5, 10, 25]}
+                    disableSelectionOnClick
+                    sx={{
+                      border: 'none',
+                      '& .MuiDataGrid-cell': {
+                        borderBottom: '1px solid #f0f0f0',
+                      },
+                      '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: '#fff8f0',
+                        borderBottom: '2px solid #ff8c00',
+                        '& .MuiDataGrid-columnHeaderTitle': {
+                          fontWeight: 600,
+                          color: '#ff8c00',
+                        },
+                      },
+                      '& .MuiDataGrid-row:hover': {
+                        backgroundColor: '#fff8f0',
+                      },
+                      '& .MuiDataGrid-footerContainer': {
+                        borderTop: '2px solid #ff8c00',
+                        backgroundColor: '#fff8f0',
+                      },
+                    }}
+                  />
+                </Box>
               </CardContent>
             </Card>
           </Box>
